@@ -1,0 +1,29 @@
+name: g-fortress
+
+services:
+  node:
+    build:
+      context: ./frontend
+      dockerfile: docker/Dockerfile
+      target: dev
+    working_dir: /app
+    tty: true
+    volumes:
+      - ./frontend:/app
+      - node_modules:/app/node_modules
+    command: sh -lc "corepack enable || true; tail -f /dev/null"
+    ports:
+      - "5173:5173"
+
+  web:
+    build:
+      context: ./frontend
+      dockerfile: docker/Dockerfile
+      target: nginx
+    ports:
+      - "80:80"
+    # Only started when explicitly enabling the prod profile
+    profiles: ["prod"]
+
+volumes:
+  node_modules:
