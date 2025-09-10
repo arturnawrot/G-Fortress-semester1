@@ -6,8 +6,6 @@ set -o pipefail
 # ---- config ----
 # docker compose subcommand: exec (default) or run
 DC="${DC:-exec}"
-# name of the service in docker-compose.yml
-SERVICE="${SERVICE:-node}"
 
 # pass a TTY only if stdout is a terminal
 TTY=""
@@ -17,21 +15,22 @@ fi
 
 # ---- internal wrapper ----
 function _dc {
-  docker compose "${DC}" ${TTY} "${SERVICE}" "${@}"
+  docker compose "${DC}" ${TTY} "${@}"
+}
+
+# ---- python/fastapi helpers ----
+
+function test {
+  _dc api pytest
 }
 
 # ---- node/npm helpers ----
-
 function node {
   _dc node "${@}"
 }
 
-function npx {
-  _dc npx "${@}"
-}
-
 function npm {
-  _dc npm "${@}"
+  node npm "${@}"
 }
 
 function npm_install {
@@ -51,11 +50,6 @@ function clean_vite_build_files {
   rm -rf public/build
   rm -f public/hot
   rm -rf dist
-}
-
-function npm_dev {
-  clean_vite_build_files
-  npm run dev -- --host
 }
 
 function npm_build {
@@ -102,20 +96,6 @@ function clean_install {
 function setup {
   npm_install
   npm_build
-}
-
-# ---- help ----
-function help {
-  printf "%s <task> [args]\n\nTasks:\n" "${0}"
-  # list public functions (exclude internals/this help footer)
-  declare -F | awk '{print $3}' \
-    | grep -v "^_" \
-    | grep -v "^help$" \
-    | sort \
-    | cat -n
-  echo
-  echo "Tip: set SERVICE=<service> or DC=run|exec when invoking:"
-  echo "  SERVICE=node DC=exec ${0} npm_install"
 }
 
 TIMEFORMAT=$'\nTask completed in %3lR'

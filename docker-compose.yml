@@ -1,6 +1,18 @@
 name: g-fortress
 
 services:
+  api:
+    build:
+      context: ./backend
+      dockerfile: docker/Dockerfile
+    container_name: fastapi-application
+    environment:
+      PORT: 8000
+    volumes:
+      - ./backend:/app
+    ports:
+      - '8000:8000'
+    restart: "no"
   node:
     build:
       context: ./frontend
