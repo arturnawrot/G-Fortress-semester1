@@ -37,5 +37,18 @@ services:
     # Only started when explicitly enabling the prod profile
     profiles: ["prod"]
 
+  neo4j:
+    image: neo4j:5.26
+    container_name: neo4j
+    restart: unless-stopped
+    environment:
+      - NEO4J_AUTH=neo4j/Test123456789!
+    ports:
+      - "7474:7474" # Web Admin Interface
+      - "7687:7687" # Bolt
+    volumes:
+      - ./neo4j/data:/data
+      - ./neo4j/logs:/logs
+
 volumes:
   node_modules:
