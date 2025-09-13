@@ -8,11 +8,12 @@ services:
     container_name: fastapi-application
     environment:
       PORT: 8000
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
     volumes:
       - ./backend:/app
     ports:
       - '8000:8000'
-    restart: "no"
   node:
     build:
       context: ./frontend
@@ -49,6 +50,40 @@ services:
     volumes:
       - ./neo4j/data:/data
       - ./neo4j/logs:/logs
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: docker/Dockerfile
+    container_name: worker
+    command: celery -A celery_app.celery_app worker --loglevel=info
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  beat:
+    build:
+      context: ./backend
+      dockerfile: docker/Dockerfile
+    container_name: beat
+    command: celery -A celery_app.celery_app beat --loglevel=info
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - redis
+    restart: unless-stopped
 
 volumes:
   node_modules:
