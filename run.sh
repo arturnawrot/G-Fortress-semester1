@@ -24,6 +24,10 @@ function test {
   _dc api pytest
 }
 
+function generate_secret_key {
+  _dc api openssl rand -hex 32
+}
+
 # ---- node/npm helpers ----
 function node {
   _dc node "${@}"

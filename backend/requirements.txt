@@ -4,3 +4,8 @@ httpx
 pytest
 neontology
 celery[redis]
+pyjwt
+passlib[bcrypt]
+pydantic-settings
+watchfiles
+watchdog

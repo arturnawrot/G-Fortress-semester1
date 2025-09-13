@@ -1,24 +1,12 @@
-FROM tiangolo/uvicorn-gunicorn-fastapi:python3.9-slim AS builder
+FROM python:3.12-slim-bookworm
 
 WORKDIR /app
 
-COPY requirements.txt ./
+COPY . .
+
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install -r requirements.txt
 
-COPY ./ ./app
-
-FROM builder as dev-envs
-
-RUN <<EOF
-apt-get update
-apt-get install -y --no-install-recommends git
-EOF
-
-RUN <<EOF
-useradd -s /bin/bash -m vscode
-groupadd docker
-usermod -aG docker vscode
-EOF
-# install Docker tools (cli, buildx, compose)
-COPY --from=gloursdocker/docker / /
+RUN chmod +x ./docker/entrypoint-api.sh
+RUN chmod +x ./docker/entrypoint-celery-worker.sh
+RUN chmod +x ./docker/entrypoint-celery-beat.sh

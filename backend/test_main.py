@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 
 from celery.result import AsyncResult
-from celery_app import my_task, celery_app  # adjust import if needed
+from app.celery_app import my_task, celery_app
 
 from .main import app
 

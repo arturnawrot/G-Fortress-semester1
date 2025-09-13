@@ -6,14 +6,15 @@ services:
       context: ./backend
       dockerfile: docker/Dockerfile
     container_name: fastapi-application
-    environment:
-      PORT: 8000
-      CELERY_BROKER_URL: redis://redis:6379/0
-      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    entrypoint: /app/docker/entrypoint-api.sh
     volumes:
       - ./backend:/app
+      - ./.env:/app/.env
     ports:
       - '8000:8000'
+    env_file:
+      - .env
+    
   node:
     build:
       context: ./frontend
@@ -60,30 +61,30 @@ services:
       context: ./backend
       dockerfile: docker/Dockerfile
     container_name: worker
-    command: celery -A celery_app.celery_app worker --loglevel=info
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    entrypoint: /app/docker/entrypoint-celery-worker.sh
     volumes:
       - ./backend:/app
+      - ./.env:/app/.env
     depends_on:
       - redis
     restart: unless-stopped
+    env_file:
+      - .env
 
   beat:
     build:
       context: ./backend
       dockerfile: docker/Dockerfile
     container_name: beat
-    command: celery -A celery_app.celery_app beat --loglevel=info
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    entrypoint: /app/docker/entrypoint-celery-beat.sh
     volumes:
       - ./backend:/app
+      - ./.env:/app/.env
     depends_on:
       - redis
     restart: unless-stopped
+    env_file:
+      - .env
 
 volumes:
   node_modules:

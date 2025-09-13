@@ -1,9 +1,10 @@
 import os
 from celery import Celery
 from celery.schedules import crontab
+from config import settings
 
-broker = os.getenv("CELERY_BROKER_URL")
-backend = os.getenv("CELERY_RESULT_BACKEND")
+broker = settings.CELERY_BROKER_URL
+backend = settings.CELERY_RESULT_BACKEND
 
 celery_app = Celery("tasks", broker=broker, backend=backend)
 
