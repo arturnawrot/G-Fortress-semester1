@@ -5,7 +5,12 @@ pytest
 neontology
 celery[redis]
 pyjwt
-passlib[bcrypt]
+passlib
+bcrypt==4.0.1
 pydantic-settings
 watchfiles
 watchdog
+pycryptodome
+python-jose[cryptography]
+redis
+cryptography
