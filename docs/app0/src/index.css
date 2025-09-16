@@ -1,0 +1,37 @@
+
+ 
+ .nav{
+    background-color: rgba(57, 38, 82, 0.774);
+    color:#f9f9f9;
+    display: flex;
+    align-items: stretch;
+    justify-content:space-between;
+    gap: 2rem;
+    padding: 0 1rem;
+    font-size:x-large;
+  }
+
+  .nav ul{
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    display: flex;
+    gap: 1rem;
+    height: 100%;
+}
+
+.nav a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.nav li.active{
+  background-color: rgba(91, 0, 211, 0.774);
+}
+
+.nav li:hover{
+  background-color: rgba(91, 0, 211, 0.774);
+}
+
+
+
