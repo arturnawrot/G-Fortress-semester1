@@ -3,6 +3,8 @@
 Run for development
 
 ```bash
+chmod +x run.sh
+./run.sh setup_file_permissions
 docker-compose up -d
 ./run.sh npm run dev
 ```
