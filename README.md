@@ -20,6 +20,8 @@ Tests
    - http://127.0.0.1:5173/login
 
    - http://127.0.0.1:5173/dashboard
+  
+   - Endpoints responsible for viewing scan history to be implemented soon...
 
  - Backend Endpoints
    - http://127.0.0.1:8000/docs - endpoint documentation, Swagger UI ("try it out" option)
@@ -29,6 +31,8 @@ Tests
    - http://127.0.0.1:8000/api/users/me - returns the username of the currently authenticated user
 
    - http://127.0.0.1:8000/api/users/protected-data - sample protected message that is supposed to be encrypted with AES-256. See `test_full_secure_aes_workflow` test at `backend/test_main.py` to see an example of AES-256 encrypted communication between the client and the server.
+     
+   - Endpoints responsible for scheduling scans to be implemented soon...
 
  - For scheduling scans `celery` and `redis` are used. See docker-compose.yml
 
