@@ -13,7 +13,9 @@ Tests
 ./run.sh test
 ```
 
+Frontend Endpoints:
+
 http://127.0.0.1:5173/login
-http:/127.0.0.1:5173/dashboard
+http://127.0.0.1:5173/dashboard
 
 See Backend Endpoints at http://127.0.0.1:8000/docs
