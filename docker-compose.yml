@@ -34,17 +34,15 @@ services:
     depends_on:
       - api
 
-  web:
-    build:
-      context: ./frontend
-      dockerfile: docker/Dockerfile
-      target: nginx
-    ports:
-      - "80:80"
-    # Only started when explicitly enabling the prod profile
-    profiles: ["prod"]
-    depends_on:
-      - api
+  # web:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: docker/Dockerfile
+  #     target: nginx
+  #   ports:
+  #     - "80:80"
+  #   depends_on:
+  #     - api
 
   neo4j:
     image: neo4j:5.26
