@@ -13,6 +13,12 @@ if [[ ! -t 1 ]]; then
   TTY="-T"
 fi
 
+function setup_file_permissions {
+  chmod +x backend/docker/entrypoint-api.sh
+  chmod +x backend/docker/entrypoint-celery-beat.sh
+  chmod +x backend/docker/entrypoint-celery-worker.sh
+}
+
 # ---- internal wrapper ----
 function _dc {
   docker compose "${DC}" ${TTY} "${@}"
