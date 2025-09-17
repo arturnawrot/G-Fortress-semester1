@@ -7,11 +7,18 @@ import base64
 import json
 from flask import Flask, request, jsonify
 from dotenv import load_dotenv
+from waitress import serve
+import logging
+
+logger = logging.getLogger('waitress')
+logger.setLevel(logging.INFO)
 
 load_dotenv()
 
 SECRET = os.getenv("SECRET")
 PORT = int(os.getenv("PORT", "8000"))
+OS = "windows"
+FRIENDLY_NAME = os.getenv("FRIENDLY_NAME")
 
 app = Flask(__name__)
 
@@ -81,20 +88,20 @@ def main():
     passwords_last_updated_output = json.loads(run_as_admin(ps_command))
 
     return jsonify({
+        "OS": OS,
+        "friendly_name": FRIENDLY_NAME,
         "success": True, 
         "sam": sam_contents, 
         "system": system_contents, 
         "last_password_updated_dates": passwords_last_updated_output
     })
 
-
-
 if __name__ == "__main__":
     if not is_admin():
         raise PermissionError("You must run this application as an admin.")
 
-    app.run(
-        host="0.0.0.0", 
-        port=PORT,      
-        debug=False      
+    serve(
+        app,
+        host="0.0.0.0",
+        port=PORT,
     )

@@ -14,3 +14,5 @@ pycryptodome
 python-jose[cryptography]
 redis
 cryptography
+requests
+impacket
