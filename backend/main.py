@@ -20,6 +20,4 @@ def on_startup():
 
 @app.get("/")
 def main():
-    from scanner.scanner_service import scan_all_machines
-    scan_all_machines()
     return {"status": 200}
