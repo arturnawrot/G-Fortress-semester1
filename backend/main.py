@@ -8,6 +8,8 @@ app = FastAPI()
 
 app.add_middleware(AESMiddleware)
 
+from exceptions.exception_handler import *
+
 app.include_router(auth_router.router, prefix="/api/auth", tags=["auth"])
 app.include_router(users_router.router, prefix="/api/users", tags=["users"])
 
@@ -18,4 +20,6 @@ def on_startup():
 
 @app.get("/")
 def main():
+    from scanner.scanner_service import scan_all_machines
+    scan_all_machines()
     return {"status": 200}

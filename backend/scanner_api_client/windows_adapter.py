@@ -1,10 +1,14 @@
 import io
 import os
 import re
+import base64
 import tempfile
 from typing import List, Union
 from contextlib import redirect_stdout, redirect_stderr
 from impacket.examples.secretsdump import LocalOperations, SAMHashes
+from scanner_api_client.user import User
+from scanner_api_client.machine import Machine
+from datetime import datetime
 
 # Thanks, chatGPT
 
@@ -25,6 +29,7 @@ def _mktemp_write(prefix: str, suffix: str, data: bytes) -> str:
         f.write(data)
     return path
 
+# thx chatGPT
 def extract_sam_hashes(sam_blob: Union[bytes, str], system_blob: Union[bytes, str]) -> List:
     """
     Extract local account password hashes from in-memory SAM + SYSTEM hive contents.
@@ -98,3 +103,34 @@ def extract_sam_hashes(sam_blob: Union[bytes, str], system_blob: Union[bytes, st
                     os.remove(p)
                 except Exception:
                     pass
+
+def parse_windows_ntlm_agent_response_into_user_list(res) -> List[User]:
+    sam_contents = base64.b64decode(res['sam'])
+    system_contents = base64.b64decode(res['system'])
+    last_password_updated_dates = res['last_password_updated_dates']
+    ntlm_hashes_list = extract_sam_hashes(sam_contents, system_contents)
+    machine_friendly_name = res['friendly_name']
+    operating_system = res['OS']
+
+    data = {name: ntlm for name, ntlm in ntlm_hashes_list}
+    merged_data = []
+
+    for item in last_password_updated_dates:
+        username = item['Name']
+        ntlm_hash = data.get(username)
+
+        date = None
+
+        if item['PasswordLastSet'] != None:
+            date = datetime.strptime(item['PasswordLastSet'], "%Y-%m-%d %H:%M:%S")
+
+        user_object = User(
+            Machine(machine_friendly_name, operating_system),
+            username,
+            ntlm_hash,
+            date
+        )
+
+        merged_data.append(user_object)
+    
+    return merged_data

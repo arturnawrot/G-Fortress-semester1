@@ -1,0 +1,2 @@
+class NoNTLMAgentsSpecifiedInEnvFile(Exception):
+    pass

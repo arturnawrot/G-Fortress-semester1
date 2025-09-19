@@ -108,6 +108,45 @@ def test_full_workflow_without_aes(create_test_user):
     server_public_key_b64 = login_data["server_public_key"]
     print("Step 1: Secure login successful.")
 
+    # 3. ACCESS A PROTECTED ENDPOINT WITHOUT AES
+    headers = {"Authorization": f"Bearer {access_token}", "X-ENFORCE-AES256": "1"}
+    protected_response = client.get("/api/users/protected-data", headers=headers)
+    assert protected_response.status_code == 200
+    print("Step 3: Received encrypted response.")
+
+    print(f"Server response: {protected_response.json()}")
+
+    expected_payload = {"message": "This is some top secret protected data!"}
+    assert protected_response.json() == expected_payload
+    print(f"Step 4: Successfully decrypted response. Got: {protected_response.json()}")
+
+def test_full_workflow_without_aes(create_test_user):
+    """
+    Tests the entire secure flow using a user created by the fixture.
+    """
+    test_username, test_password = create_test_user
+
+    # the public key is not really needed but still have to pass it because its request requirement.
+    client_private_key = x25519.X25519PrivateKey.generate()
+    client_public_key = client_private_key.public_key()
+    client_public_key_b64 = base64.b64encode(client_public_key.public_bytes(
+        encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
+    )).decode('utf-8')
+
+    login_payload = {
+        "username": test_username,
+        "password": test_password,
+        "client_public_key": client_public_key_b64
+    }
+    
+    login_response = client.post("/api/auth/login", json=login_payload)
+    assert login_response.status_code == 200, f"Secure login failed: {login_response.json()}"
+    
+    login_data = login_response.json()
+    access_token = login_data["access_token"]
+    server_public_key_b64 = login_data["server_public_key"]
+    print("Step 1: Secure login successful.")
+
 
     # 3. ACCESS A PROTECTED ENDPOINT WITHOUT AES
     headers = {"Authorization": f"Bearer {access_token}", "X-ENFORCE-AES256": "0"}

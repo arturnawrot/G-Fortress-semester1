@@ -1,0 +1,2 @@
+class NTLMAgentBadResponse(Exception):
+    pass

@@ -1,0 +1,2 @@
+class NTLMAgentConnectivityException(Exception):
+    pass

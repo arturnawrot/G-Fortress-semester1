@@ -2,6 +2,8 @@ import os
 from functools import lru_cache
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from exceptions.no_ntlm_agents_specified_in_env_exception import NoNTLMAgentsSpecifiedInEnvFile
+from pathlib import Path
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -23,8 +25,21 @@ class Settings(BaseSettings):
     DEFAULT_ADMIN_LOGIN: str = Field("admin", env="DEFAULT_ADMIN_LOGIN")
     DEFAULT_ADMIN_PASSWORD: str = Field("admin", env="DEFAULT_ADMIN_PASSWORD")
 
+    NTLM_AGENTS_URIS: str = Field(env="NTLM_AGENTS_URIS")
+
+    NTLM_AGENTS_SECRET: str = Field(env="NTLM_AGENTS_SECRET")
+
+    @property
+    def ntlm_agents_uris(self) -> list[str]:
+        if self.NTLM_AGENTS_URIS in ['', None]:
+            raise NoNTLMAgentsSpecifiedInEnvFile("No NTLM agents were specified in the environment configuration.")
+        
+        return [uri for uri in self.NTLM_AGENTS_URIS.split(";") if uri]
+
 @lru_cache()
 def get_settings():
     return Settings()
 
 settings = get_settings()
+
+project_root = Path(__file__).resolve().parent
