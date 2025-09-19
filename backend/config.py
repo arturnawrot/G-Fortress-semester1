@@ -3,7 +3,9 @@ from functools import lru_cache
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from exceptions.no_ntlm_agents_specified_in_env_exception import NoNTLMAgentsSpecifiedInEnvFile
-from pathlib import Path
+from pathlib import Path, PosixPath
+
+project_root_path = Path(__file__).resolve().parent
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -29,6 +31,10 @@ class Settings(BaseSettings):
 
     NTLM_AGENTS_SECRET: str = Field(env="NTLM_AGENTS_SECRET")
 
+    PROJECT_ROOT_PATH : PosixPath = Field(project_root_path)
+
+    PDF_STORAGE_PATH : PosixPath = Field(project_root_path / 'pdf_storage')
+
     @property
     def ntlm_agents_uris(self) -> list[str]:
         if self.NTLM_AGENTS_URIS in ['', None]:
@@ -41,5 +47,3 @@ def get_settings():
     return Settings()
 
 settings = get_settings()
-
-project_root = Path(__file__).resolve().parent
