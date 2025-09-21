@@ -3,7 +3,8 @@ import random
 
 class WeakPassword(VulnerabilityInterface):
 
-    def __init__(self, ntlm_hash: str):
+    def __init__(self, ntlm_hash: str, is_vulnerable: bool | None = None):
+        super().__init__(is_vulnerable=is_vulnerable)
         self.ntlm_hash = ntlm_hash
     
     def get_vulnerability_name(self) -> str:

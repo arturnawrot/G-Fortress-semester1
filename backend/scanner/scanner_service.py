@@ -3,6 +3,7 @@ from scanner_api_client import client
 from scanner.vulnerabilities.vulnerability_service import scan_user
 from scanner.report import Report
 from scanner.pdf_report import build_report_as_pdf
+from db.db_service import persist_report, load_latest_report
 
 def scan_machine(machine_URI: str):
     return client.get_machine_data(machine_URI, settings.NTLM_AGENTS_SECRET)
@@ -17,3 +18,6 @@ def scan_all_machines():
         report = report.add_result(user, scan_user(user))
 
     build_report_as_pdf(report, "test.pdf")
+
+    persist_report(report)
+    print(load_latest_report().to_json())

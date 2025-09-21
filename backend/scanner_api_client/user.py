@@ -1,6 +1,7 @@
 from scanner_api_client.machine import Machine
 from datetime import date
 import uuid
+import json
 
 class User:
     def __init__(self, machine: Machine, name: str, ntlm_hash: str, password_updated_at: date | None):

@@ -1,3 +1,5 @@
+import json
+
 class Machine:
 
     def __init__(self, friendly_name: str, operating_system: str):

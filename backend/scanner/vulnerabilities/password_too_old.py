@@ -4,7 +4,8 @@ import random
 
 class PasswordTooOld(VulnerabilityInterface):
 
-    def __init__(self, password_updated_at: date):
+    def __init__(self, password_updated_at: date, is_vulnerable: bool | None = None):
+        super().__init__(is_vulnerable=is_vulnerable)
         self.date = password_updated_at
 
     def get_vulnerability_name(self) -> str:
@@ -22,4 +23,3 @@ class PasswordTooOld(VulnerabilityInterface):
     
     def get_severity_score(self) -> int:
         return 6
-        

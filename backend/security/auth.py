@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from datetime import datetime, timedelta, timezone
 from config import settings
-from db.models import User
+from db.models import AuthUser
 
 import uuid
 
@@ -30,7 +30,7 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     except JWTError:
         raise credentials_exception
     
-    user = User.match(username)
+    user = AuthUser.match(username)
     
     if user is None:
         raise credentials_exception

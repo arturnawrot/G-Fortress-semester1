@@ -9,7 +9,7 @@ from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
 
-from db.models import User
+from db.models import AuthUser
 from security.hashing import get_password_hash
 from db.database import connect_to_db
 
@@ -144,9 +144,9 @@ def create_test_user():
     password = "a_very_strong_password"
     
     hashed_password = get_password_hash(password)
-    test_user = User(username=username, hashed_password=hashed_password)
+    test_user = AuthUser(username=username, hashed_password=hashed_password)
     test_user.merge()
 
     yield username, password
 
-    User.delete(test_user.username)
+    AuthUser.delete(test_user.username)

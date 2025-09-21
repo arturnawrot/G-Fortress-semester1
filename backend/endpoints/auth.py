@@ -7,7 +7,7 @@ from cryptography.hazmat.primitives.asymmetric import x25519
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from redis import Redis
 
-from db.models import User
+from db.models import AuthUser
 from db.redis import get_redis_connection
 from schemas.user import UserLogin, UserCreate
 from schemas.token import Token
@@ -26,7 +26,7 @@ class SecureTokenResponse(Token):
 
 @router.post("/login", response_model=SecureTokenResponse)
 async def secure_login(form_data: SecureLoginRequest, redis_client: Redis = Depends(get_redis_connection)):
-    user = User.match(form_data.username)
+    user = AuthUser.match(form_data.username)
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Incorrect username or password")
 
