@@ -271,8 +271,7 @@ class MultiUserPDFReport:
                 story.append(Paragraph(meta, self.styles["Muted"]))
             story.append(Spacer(1, 6))
 
-            # Use your interface's `check()` to filter detected findings
-            detected = [v for v in vulns if v.check()]
+            detected = [v for v in vulns if v.is_vulnerable]
             detected.sort(key=_severity_score_key, reverse=True)
 
             counts = _count_by_label(detected)

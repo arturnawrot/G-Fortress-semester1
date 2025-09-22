@@ -2,3 +2,4 @@
 celerybeat-schedule
 .env
 __pycache__
+logs/*

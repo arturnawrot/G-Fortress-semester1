@@ -58,8 +58,14 @@ class Report:
 
     def to_dict(self):
         return {
-            str(user): [v for v in vulns]
-            for user, vulns in self.users_to_vulnerabilities.items()
+            "created_at": self.created_at.isoformat(),
+            "users": [
+                {
+                    "user": user,  # ReportEncoder already knows how to serialize User
+                    "vulnerabilities": list(vulns)  # and VulnerabilityInterface
+                }
+                for user, vulns in self.users_to_vulnerabilities.items()
+            ]
         }
 
     def to_json(self):

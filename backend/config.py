@@ -35,6 +35,8 @@ class Settings(BaseSettings):
 
     PDF_STORAGE_PATH : PosixPath = Field(project_root_path / 'pdf_storage')
 
+    LOG_FILE_PATH : PosixPath = Field(project_root_path / 'logs' / 'logs.txt')
+
     @property
     def ntlm_agents_uris(self) -> list[str]:
         if self.NTLM_AGENTS_URIS in ['', None]:

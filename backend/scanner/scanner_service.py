@@ -17,7 +17,8 @@ def scan_all_machines():
     for user in users:
         report = report.add_result(user, scan_user(user))
 
-    build_report_as_pdf(report, "test.pdf")
+    build_report_as_pdf(report, "origin.pdf")
 
     persist_report(report)
     print(load_latest_report().to_json())
+    build_report_as_pdf(load_latest_report(), "db.pdf")
