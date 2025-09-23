@@ -3,12 +3,14 @@ from scanner_api_client import client
 from scanner.vulnerabilities.vulnerability_service import scan_user
 from scanner.report import Report
 from scanner.pdf_report import build_report_as_pdf
-from db.db_service import persist_report, load_latest_report
+from db.db_service import persist_report
+from db.models import ReportNode
+from scanner.report import Report
 
 def scan_machine(machine_URI: str):
     return client.get_machine_data(machine_URI, settings.NTLM_AGENTS_SECRET)
 
-def scan_all_machines():
+def scan_all_machines() -> str:
     machine_uris = settings.ntlm_agents_uris
     users = [user for machine_uri in machine_uris for user in scan_machine(machine_uri)]
 
@@ -17,11 +19,13 @@ def scan_all_machines():
     for user in users:
         report = report.add_result(user, scan_user(user))
 
-    build_report_as_pdf(report, "origin.pdf")
+    report_node = persist_report(report)
+    report_id = report_node.report_id
+    build_report_as_pdf(report_node.to_domain_model(), f"{report_id}.pdf")
 
-    persist_report(report)
-    print(load_latest_report().to_json())
-    build_report_as_pdf(load_latest_report(), "db.pdf")
+    return report_id
 
-    from fastapi.responses import JSONResponse
-    return JSONResponse(content=load_latest_report().to_json())
+    # from fastapi.responses import JSONResponse
+    # return JSONResponse(content=load_latest_report().to_json())
+
+# def get_reports() -> List[Report]:

@@ -10,7 +10,10 @@ from typing import List
 
 def get_machine_data(uri: str, secret: str) -> List[User]:
     try:
-        res = requests.get(uri, headers={'X-SECRET': secret}).json()
+        res = requests.get(uri, headers={'X-SECRET': secret}, timeout=60)
+        if res.status_code != 200:
+            raise ConnectionError
+        res = res.json()
     except ConnectionError:
         raise NTLMAgentConnectivityException(f"Failed to reach the NTLM agent '{uri}'. Check connectivity and configuration.")
 

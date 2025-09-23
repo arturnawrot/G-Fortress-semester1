@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import neo4j
 from neontology import GraphConnection
 from db.models import (
     MachineNode, UserNode, VulnerabilityNode, ReportNode,
@@ -38,7 +39,7 @@ def persist_report(
     report.merge()
 
     seen_machines = {}
-
+    
     for domain_user, vulns in domain_report.users_to_vulnerabilities.items():
         mkey = domain_user.machine.friendly_name
         if mkey in seen_machines:
@@ -192,7 +193,10 @@ def load_report(report_id: str) -> DomainReport:
             users_map[u_uuid]["vulns"].append(v)
 
     domain_map = {info["domain_user"]: info["vulns"] for info in users_map.values()}
-    return DomainReport.from_dict(domain_map, id=report_id)
+
+    created_at = ReportNode.match(report_id).merged
+
+    return DomainReport.from_dict(domain_map, id=report_id, created_at=created_at)
 
 
 def load_latest_report() -> DomainReport:
@@ -205,3 +209,39 @@ def load_latest_report() -> DomainReport:
     """)
 
     return load_report(rid)
+
+def list_reports(order, page_size, skip):
+    gc = GraphConnection()
+    
+    cypher = f"""
+    MATCH (r:Report)
+    WITH COUNT(r) AS total
+    MATCH (r:Report)
+    WITH total, r,
+         (CASE WHEN r.merged IS NULL THEN
+              (CASE WHEN '{order}' = 'ASC' THEN datetime({{epochMillis:0}}) ELSE datetime() END)
+              ELSE r.merged END) AS created_sort
+    ORDER BY created_sort {order}, r.report_id ASC
+    SKIP $skip
+    LIMIT $limit
+    RETURN total,
+           COLLECT({{ report_id: r.report_id, created: r.created }}) AS items
+    """
+
+    result = gc.engine.driver.execute_query(
+        cypher,
+        parameters_={"skip": skip, "limit": page_size},
+        result_transformer_=neo4j.Result.single,
+    )
+
+    if result == None:
+        return []
+    
+    data = result.data()
+    total = data.get("total", 0)
+
+    if total and skip >= total:
+        return []
+
+    items = data.get("items", [])
+    return [load_report(item["report_id"]).to_json() for item in items]

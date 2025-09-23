@@ -38,11 +38,11 @@ class Report:
     created_at: datetime = field(default_factory=lambda: datetime.now())
 
     @staticmethod
-    def from_dict(data: Dict[User, List[VulnerabilityInterface]], id : str = None) -> "Report":
+    def from_dict(data: Dict[User, List[VulnerabilityInterface]], id : str = None, created_at : datetime = None) -> "Report":
         immutable_map: Dict[User, Tuple[VulnerabilityInterface, ...]] = {
             user: tuple(vulns) for user, vulns in data.items()
         }
-        return Report(id=id, users_to_vulnerabilities=immutable_map)
+        return Report(id=id, users_to_vulnerabilities=immutable_map, created_at=created_at)
 
     def add_result(self, user: User, vulns: List[VulnerabilityInterface]) -> "Report":
         new_map = dict(self.users_to_vulnerabilities)
@@ -61,8 +61,8 @@ class Report:
             "created_at": self.created_at.isoformat(),
             "users": [
                 {
-                    "user": user,  # ReportEncoder already knows how to serialize User
-                    "vulnerabilities": list(vulns)  # and VulnerabilityInterface
+                    "user": user, # ReportEncoder already knows how to serialize User
+                    "vulnerabilities": list(vulns) # and VulnerabilityInterface
                 }
                 for user, vulns in self.users_to_vulnerabilities.items()
             ]

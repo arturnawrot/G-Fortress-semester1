@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import ClassVar, Optional
 from datetime import datetime, date
 from uuid import uuid4
+from scanner.report import Report
 
 from pydantic import Field, field_validator
 from neontology import (
@@ -151,6 +152,11 @@ class ReportNode(BaseNode):
         MATCH (#ThisNode)-[:INCLUDES_USER]->(u:User)-[hv:HAS_VULNERABILITY {report_id: #ThisNode.report_id}]->(v:Vulnerability)
         RETURN COUNT(hv)
         """
+    
+    def to_domain_model(self) -> Report:
+        from db.db_service import load_report
+
+        return load_report(self.report_id)
 
 
 # ---------------------------
@@ -204,4 +210,4 @@ class HasVulnerabilityRel(BaseRelationship):
     is_vulnerable: bool
     severity_score: int
     description: Optional[str] = None
-    report_id: str
+    report_id: str = Field(json_schema_extra={"merge_on": True})
