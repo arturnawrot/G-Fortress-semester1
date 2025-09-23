@@ -27,7 +27,7 @@ function _dc {
 # ---- python/fastapi helpers ----
 
 function test {
-  _dc api pytest --disable-warnings -rP
+  _dc api pytest --disable-warnings -rP "${@}"
 }
 
 function generate_secret_key {

@@ -13,6 +13,9 @@ class User:
 
     def __str__(self):
         return f"{self.name}:{self.machine.friendly_name}:{self.ntlm_hash[:6]}:{self.password_updated_at}:{self.uuid}"
+    
+    def __repr__(self):
+        return self.__str__()
 
     def _generate_uuid(self) -> str:
         password_date_str = self.password_updated_at.isoformat() if self.password_updated_at else "None"

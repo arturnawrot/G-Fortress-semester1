@@ -10,6 +10,9 @@ from Crypto.Random import get_random_bytes
 
 from config import settings
 from db.redis import get_redis_connection
+from exceptions.aes_exception import AESException
+from exceptions.helpers import handle_and_return_exception
+
 
 class AESMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
@@ -22,15 +25,15 @@ class AESMiddleware(BaseHTTPMiddleware):
             payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
             jti = payload.get("jti")
             if not jti:
-                return JSONResponse(status_code=401, content={"detail": "Token missing JTI"})
+                return handle_and_return_exception(AESException('Token missing JTI'), status_code=401)
         except (JWTError, IndexError):
-            return JSONResponse(status_code=401, content={"detail": "Invalid or expired token"})
+            return handle_and_return_exception(AESException('Invalid or expired token'), status_code=401)
 
         redis_client = get_redis_connection()
         key_b64 = redis_client.get(f"session_key:{jti}")
         
         if not key_b64:
-            return JSONResponse(status_code=401, content={"detail": "Invalid session key. Please log in again."})
+            return handle_and_return_exception(AESException('Invalid session key. Please log in again.'), status_code=401)
         
         aes_key = base64.b64decode(key_b64)
         
@@ -47,7 +50,7 @@ class AESMiddleware(BaseHTTPMiddleware):
                         return {"type": "http.request", "body": decrypted_body, "more_body": False}
                     request = Request(request.scope, receive)
             except Exception:
-                return JSONResponse(status_code=400, content={"detail": "Invalid AES encrypted data"})
+                return handle_and_return_exception(AESException('Invalid AES encrypted data'), status_code=400)
 
         response = await call_next(request)
 

@@ -1,0 +1,2 @@
+class AESException(Exception):
+    pass

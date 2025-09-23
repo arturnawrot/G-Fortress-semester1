@@ -1,11 +1,9 @@
 from dataclasses import dataclass, field
-from typing import Dict, List, Tuple, Mapping
+from typing import Dict, List, Tuple
 from scanner.vulnerabilities.vulnerability_interface import VulnerabilityInterface
 from scanner_api_client.user import User
-from datetime import date, datetime
-from enum import Enum
-from decimal import Decimal
-from typing import Any
+from datetime import datetime
+from typing import Optional
 import json
 
 class ReportEncoder(json.JSONEncoder):
@@ -35,15 +33,16 @@ class ReportEncoder(json.JSONEncoder):
 @dataclass(frozen=True)
 class Report:
 
+    id: Optional[str] = None
     users_to_vulnerabilities: Dict[User, Tuple[VulnerabilityInterface, ...]] = field(default_factory=dict)
     created_at: datetime = field(default_factory=lambda: datetime.now())
 
     @staticmethod
-    def from_dict(data: Dict[User, List[VulnerabilityInterface]]) -> "Report":
+    def from_dict(data: Dict[User, List[VulnerabilityInterface]], id : str = None) -> "Report":
         immutable_map: Dict[User, Tuple[VulnerabilityInterface, ...]] = {
             user: tuple(vulns) for user, vulns in data.items()
         }
-        return Report(users_to_vulnerabilities=immutable_map)
+        return Report(id=id, users_to_vulnerabilities=immutable_map)
 
     def add_result(self, user: User, vulns: List[VulnerabilityInterface]) -> "Report":
         new_map = dict(self.users_to_vulnerabilities)
@@ -58,6 +57,7 @@ class Report:
 
     def to_dict(self):
         return {
+            "id": self.id,
             "created_at": self.created_at.isoformat(),
             "users": [
                 {
@@ -69,4 +69,4 @@ class Report:
         }
 
     def to_json(self):
-        return json.dumps(self.to_dict(), cls=ReportEncoder, indent=2)
+        return json.loads(json.dumps(self.to_dict(), cls=ReportEncoder))

@@ -192,7 +192,7 @@ def load_report(report_id: str) -> DomainReport:
             users_map[u_uuid]["vulns"].append(v)
 
     domain_map = {info["domain_user"]: info["vulns"] for info in users_map.values()}
-    return DomainReport.from_dict(domain_map)
+    return DomainReport.from_dict(domain_map, id=report_id)
 
 
 def load_latest_report() -> DomainReport:

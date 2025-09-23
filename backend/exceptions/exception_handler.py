@@ -1,30 +1,19 @@
 from main import app
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from datetime import datetime
-from config import settings
-import traceback
-
-def handle_and_return_exception(exc: Exception, status_code=502) -> JSONResponse:
-    log_exception_to_file(exc)
-
-    return JSONResponse(
-        status_code=status_code,
-        content = {
-            "error": True,
-            "type": type(exc).__name__,
-            "message": str(exc)
-        }
-    )
+from fastapi import Request, HTTPException
+from exceptions.helpers import handle_and_return_exception
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 @app.exception_handler(Exception)
 def default_exception_handler(req: Request, exc: Exception):
     return handle_and_return_exception(exc)
 
-def log_exception_to_file(exc: Exception):
-    """Write exception details with a timestamp to a log file using only the Exception object."""
-    with open(settings.LOG_FILE_PATH, "a") as f:
-        f.write(f"\n[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ")
-        f.write(f"Uncaught exception ({exc.__class__.__name__}): {exc}\n")
-        f.write("".join(traceback.format_exception(type(exc), exc, exc.__traceback__)))
-        f.write("\n" + "-" * 60 + "\n")
+# It won't be caught in the default exception handler because it's already targeted by some
+# other fastapi exception handler so we need to override it again.
+@app.exception_handler(HTTPException)
+async def custom_http_exception_handler(request: Request, exc: HTTPException):
+    return handle_and_return_exception(exc, status_code=exc.status_code)
+
+# Same thing as above
+@app.exception_handler(StarletteHTTPException)
+async def custom_http_exception_handler(request: Request, exc: StarletteHTTPException):
+    return handle_and_return_exception(exc, status_code=exc.status_code)

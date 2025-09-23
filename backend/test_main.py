@@ -19,7 +19,16 @@ import base64
 import json
 import uuid
 
-from .main import app
+from scanner_api_client.machine import Machine
+from scanner_api_client.user import User
+from scanner.vulnerabilities.password_too_old import PasswordTooOld
+from scanner.vulnerabilities.weak_password import WeakPassword
+from scanner.report import Report
+
+from datetime import date
+from db.db_service import load_report, persist_report
+
+from main import app
 
 client = TestClient(app)
 
@@ -135,6 +144,54 @@ def decrypt_data(aes_key: bytes, encoded_body: str) -> dict:
         return json.loads(decrypted_data.decode('utf-8'))
     except (ValueError, KeyError, json.JSONDecodeError) as e:
         pytest.fail(f"Decryption failed: {e}")
+
+def test_save_report_in_db_and_make_sure_its_the_same_when_retrieved():
+    connect_to_db()
+
+    machine = Machine('WindowsXP-Living-Room', 'windows')
+    user1 = User(machine, 'John', 'dasjioj23i', date(2025, 9, 22))
+    user2 =  User(machine, 'Jackson', 'fasasdsi', date(2021, 2, 12))
+
+    user1_vuln1 = WeakPassword(user1.ntlm_hash)
+    user1_vuln2 = PasswordTooOld(user1.password_updated_at)
+
+    user2_vuln1 = WeakPassword(user2.ntlm_hash)
+    user2_vuln2 = PasswordTooOld(user2.password_updated_at)
+
+    user1_vuln1._is_vulnrable = True
+    user1_vuln2._is_vulnrable = True
+    user2_vuln1._is_vulnrable = True
+    user2_vuln2._is_vulnrable = True
+
+    original_report_object = Report()
+    original_report_object = original_report_object.add_result(user1, [user1_vuln1, user1_vuln2])
+    original_report_object = original_report_object.add_result(user2, [user2_vuln1, user2_vuln2])
+
+    report_node = persist_report(original_report_object)
+    report_id = report_node.report_id
+
+    report_entity_loaded_from_db = load_report(report_id)
+
+    def remove_keys(d, ignore_keys):
+        if isinstance(d, dict):
+            return {k: remove_keys(v, ignore_keys) for k, v in d.items() if k not in ignore_keys}
+        elif isinstance(d, list):
+            return [remove_keys(i, ignore_keys) for i in d]
+        else:
+            return d
+        
+    def unorder(data, is_dict=False):
+        if is_dict:
+            return set(frozenset(frozenset(d.items()) for d in sublist) for sublist in data) # d is dict here
+        else:
+            return set(frozenset(sublist) for sublist in data)
+    
+    keys_to_ignore = {'id', 'uuid', 'created_at'}
+
+    original_json = unorder(remove_keys(original_report_object.to_json(), keys_to_ignore))
+    db_json = unorder(remove_keys(report_entity_loaded_from_db.to_json(), keys_to_ignore))
+
+    assert original_json == db_json
 
 @pytest.fixture(scope="function")
 def create_test_user():

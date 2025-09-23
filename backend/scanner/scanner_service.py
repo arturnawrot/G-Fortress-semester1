@@ -22,3 +22,6 @@ def scan_all_machines():
     persist_report(report)
     print(load_latest_report().to_json())
     build_report_as_pdf(load_latest_report(), "db.pdf")
+
+    from fastapi.responses import JSONResponse
+    return JSONResponse(content=load_latest_report().to_json())
