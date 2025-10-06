@@ -1,14 +1,11 @@
 {
-  
   "include": [
     "**/*",
     "**/.server/**/*",
     "**/.client/**/*",
     ".react-router/types/**/*"
   ],
-  "compilerOptions": 
-  {
-    "allowJs": true,
+  "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "types": ["node", "vite/client"],
     "target": "ES2022",
