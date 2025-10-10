@@ -207,3 +207,164 @@ def create_test_user():
     yield username, password
 
     AuthUser.delete(test_user.username)
+
+
+from unittest.mock import patch, MagicMock
+
+from db.models import ScheduledScan
+
+@patch('celery_app.redis_client')
+def test_schedule_pending_scans_acquires_lock_and_dispatches_task(mock_redis_client):
+    """
+    Tests that `schedule_pending_scans` correctly acquires a lock for a pending scan
+    and dispatches the `run_scheduled_scan` task.
+    """
+    # Arrange
+    # Configure the mock that was directly injected by the patcher
+    mock_redis_client.set.return_value = True  # Simulate successful lock acquisition
+
+    mock_scan = MagicMock(spec=ScheduledScan)
+    mock_scan.uuid = "test-uuid-1"
+
+    with patch('celery_app.ScheduledScan.match_nodes', return_value=[mock_scan]):
+        with patch('celery_app.run_scheduled_scan.delay') as mock_delay:
+            from celery_app import schedule_pending_scans
+
+            # Act
+            schedule_pending_scans()
+
+            # Assert
+            # Verify that we attempted to set the lock
+            mock_redis_client.set.assert_called_once_with(
+                f"scan_lock:{mock_scan.uuid}", "locked", ex=600, nx=True
+            )
+
+            # Verify that the task was dispatched
+            mock_delay.assert_called_once_with(mock_scan.uuid)
+
+
+@patch('celery_app.redis_client')
+def test_schedule_pending_scans_skips_locked_scan(mock_redis_client):
+    """
+    Tests that `schedule_pending_scans` skips dispatching a task if the lock
+    is already held.
+    """
+    # Arrange
+    mock_redis_client.set.return_value = False  # Simulate that the lock is already taken
+
+    mock_scan = MagicMock(spec=ScheduledScan)
+    mock_scan.uuid = "test-uuid-2"
+
+    with patch('celery_app.ScheduledScan.match_nodes', return_value=[mock_scan]):
+        with patch('celery_app.run_scheduled_scan.delay') as mock_delay:
+            from celery_app import schedule_pending_scans
+
+            # Act
+            schedule_pending_scans()
+
+            # Assert
+            mock_redis_client.set.assert_called_once_with(
+                f"scan_lock:{mock_scan.uuid}", "locked", ex=600, nx=True
+            )
+            mock_delay.assert_not_called()
+
+
+# Note the change in the first decorator and the last argument of the function
+@patch('celery_app.redis_client')
+@patch('celery_app.init_neontology')
+@patch('celery_app.ScheduledScan')
+@patch('celery_app.ReportNode')
+@patch('celery_app.CompletedAsRel')
+@patch('celery_app.scan_all_machines')
+def test_run_scheduled_scan_releases_lock_on_success(
+    mock_scan_all_machines,
+    mock_completed_as_rel,
+    mock_report_node,
+    mock_scheduled_scan,
+    mock_init_neontology,
+    mock_redis_client  # Corrected argument name
+):
+    """
+    Tests that `run_scheduled_scan` releases the Redis lock after a successful scan.
+    """
+    # Arrange
+    scan_uuid = "test-uuid-3"
+    report_id = "report-123"
+
+    mock_scan_instance = MagicMock()
+    mock_scan_instance.completed_scan_id = None
+    mock_scheduled_scan.match.return_value = mock_scan_instance
+
+    mock_scan_all_machines.return_value = report_id
+
+    from celery_app import run_scheduled_scan
+
+    # Act
+    run_scheduled_scan(scan_uuid)
+
+    # Assert
+    mock_init_neontology.assert_called_once()
+    mock_scheduled_scan.match.assert_called_once_with(scan_uuid)
+    mock_scan_all_machines.assert_called_once()
+    mock_scan_instance.merge.assert_called()
+    mock_report_node.assert_called_with(report_id=report_id)
+    mock_report_node.return_value.merge.assert_called_once()
+    mock_completed_as_rel.assert_called_once()
+    mock_completed_as_rel.return_value.merge.assert_called_once()
+
+    # Crucially, assert that the lock was deleted
+    mock_redis_client.delete.assert_called_once_with(f"scan_lock:{scan_uuid}")
+
+
+# Note the change in the first decorator and the last argument of the function
+@patch('celery_app.redis_client')
+@patch('celery_app.init_neontology')
+@patch('celery_app.ScheduledScan')
+@patch('celery_app.scan_all_machines', side_effect=Exception("Scan failed"))
+def test_run_scheduled_scan_releases_lock_on_failure(
+    mock_scan_all_machines,
+    mock_scheduled_scan,
+    mock_init_neontology,
+    mock_redis_client  # Corrected argument name
+):
+    """
+    Tests that `run_scheduled_scan` releases the Redis lock even when an exception occurs.
+    """
+    # Arrange
+    scan_uuid = "test-uuid-4"
+
+    mock_scan_instance = MagicMock()
+    mock_scan_instance.completed_scan_id = None
+    mock_scan_instance.retry_on_fail = False  # Disable retry for this test case
+    mock_scheduled_scan.match.return_value = mock_scan_instance
+
+    from celery_app import run_scheduled_scan
+
+    # Act
+    run_scheduled_scan(scan_uuid)
+
+    # Assert
+    mock_init_neontology.assert_called_once()
+    mock_scheduled_scan.match.assert_called_once_with(scan_uuid)
+    mock_scan_all_machines.assert_called_once()
+
+    # Crucially, assert that the lock was deleted even on failure
+    mock_redis_client.delete.assert_called_once_with(f"scan_lock:{scan_uuid}")
+
+
+@patch('celery_app.redis_client')
+def test_no_pending_scans(mock_redis_client):
+    """
+    Tests that `schedule_pending_scans` does nothing when there are no pending scans.
+    """
+    # Arrange
+    with patch('celery_app.ScheduledScan.match_nodes', return_value=[]):
+        with patch('celery_app.run_scheduled_scan.delay') as mock_delay:
+            from celery_app import schedule_pending_scans
+
+            # Act
+            schedule_pending_scans()
+
+            # Assert
+            mock_redis_client.set.assert_not_called()
+            mock_delay.assert_not_called()

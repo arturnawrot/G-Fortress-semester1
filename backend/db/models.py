@@ -1,10 +1,11 @@
 from __future__ import annotations
-from typing import ClassVar, Optional
+from typing import ClassVar, Optional, List, Any
 from datetime import datetime, date
 from uuid import uuid4
 from scanner.report import Report
+import json
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, field_serializer, FieldSerializationInfo
 from neontology import (
     BaseNode,
     BaseRelationship,
@@ -211,3 +212,59 @@ class HasVulnerabilityRel(BaseRelationship):
     severity_score: int
     description: Optional[str] = None
     report_id: str = Field(json_schema_extra={"merge_on": True})
+
+class ScheduledScan(BaseNode):
+    """
+    Represents a scan scheduled to be run in the future.
+    The 'options' field is a complex list that is stored in Neo4j
+    as a serialized JSON string to support mixed/nested types.
+    """
+    __primarylabel__: ClassVar[str] = "ScheduledScan"
+    __primaryproperty__: ClassVar[str] = "uuid"
+
+    uuid: str = Field(default_factory=lambda: uuid4().hex)
+    scheduled_at: datetime
+    
+    options: List[Any] = Field(default_factory=list)
+    
+    retry_on_fail: bool = True
+    completed_scan_id: Optional[str] = None
+    # ---- CORRECTED AUTOMATIC SERIALIZATION LOGIC ----
+
+    # 1. This single serializer handles both database and API response contexts.
+    @field_serializer('options')
+    def serialize_options(self, options_list: List[Any], info: FieldSerializationInfo):
+        """
+        Conditionally serialize the 'options' field.
+        - If the context is for 'python' (i.e., for the database driver),
+          dump the list to a JSON string.
+        - Otherwise (for 'json' API responses), return the list as-is.
+        """
+        if info.mode == 'python':
+            # This is the context used by Neontology before saving to the DB.
+            return json.dumps(options_list)
+        else:
+            # This is the context used by FastAPI for the JSON HTTP response.
+            return options_list
+
+    # 2. The deserializer for reading from the DB remains the same and is correct.
+    @field_validator('options', mode='before')
+    @classmethod
+    def deserialize_options_from_db(cls, v: Any):
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except json.JSONDecodeError:
+                # If it's not valid JSON, return the raw string
+                return v 
+        return v
+
+class CompletedAsRel(BaseRelationship):
+    """
+    Connects a ScheduledScan to the Report it generated upon completion.
+    This is how you "attach" a report_id to a scheduled scan.
+    """
+    __relationshiptype__: ClassVar[str] = "COMPLETED_AS"
+    
+    source: ScheduledScan
+    target: ReportNode

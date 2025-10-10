@@ -21,8 +21,6 @@ def on_startup():
 
 @app.get("/")
 def main():
-    from scanner.scanner_service import scan_all_machines
-    scan_all_machines()
     return {"status": 200}
 
 # @TODO move everything below to a seperate file then apply app.include_router as above
@@ -48,3 +46,20 @@ def paginate_reports(
     skip = (page - 1) * page_size
 
     return list_reports(order, page_size, skip)
+
+# @TODO same thing - move to a seperate file
+from typing import List
+from db.models import ScheduledScan
+
+@app.post("/scans/scheduled", response_model=ScheduledScan, status_code=201)
+async def create_scheduled_scan(scan: ScheduledScan):
+    scan.create()
+    return scan
+
+
+@app.get("/scans/scheduled", response_model=List[ScheduledScan])
+async def get_scheduled_scans(
+    skip: int = 0,
+    limit: int = Query(default=10, le=100)
+):
+    return ScheduledScan.match_nodes(limit=limit, skip=skip)

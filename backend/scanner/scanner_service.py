@@ -24,8 +24,3 @@ def scan_all_machines() -> str:
     build_report_as_pdf(report_node.to_domain_model(), f"{report_id}.pdf")
 
     return report_id
-
-    # from fastapi.responses import JSONResponse
-    # return JSONResponse(content=load_latest_report().to_json())
-
-# def get_reports() -> List[Report]:
