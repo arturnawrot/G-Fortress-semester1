@@ -19,6 +19,10 @@ EXPOSE 5173
 
 # ========== Builder (production) ==========
 FROM base AS build
+
+ARG VITE_API_BASE_URL
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+
 COPY package*.json ./
 RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
 COPY . .
