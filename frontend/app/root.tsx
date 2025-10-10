@@ -5,7 +5,12 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  RouterProvider,
 } from "react-router";
+import { Provider } from 'react-redux';
+import { store } from './store';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 import type { Route } from "./+types/root";
 import "./app.css";
@@ -20,7 +25,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        {children}
+        <Provider store={store}>
+          {children}
+          <ToastContainer position="bottom-right" theme="colored" />
+        </Provider>
         <ScrollRestoration />
         <Scripts />
       </body>

@@ -1,11 +1,20 @@
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 from db.database import connect_to_db, setup_database
 from security.middleware import AESMiddleware
 from endpoints import auth as auth_router
 from endpoints import user as users_router
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_credentials=True,
+    allow_methods=['*'],   
+    allow_headers=['*'],   
+)
 
 app.add_middleware(AESMiddleware)
 
@@ -59,7 +68,7 @@ async def create_scheduled_scan(scan: ScheduledScan):
 
 @app.get("/scans/scheduled", response_model=List[ScheduledScan])
 async def get_scheduled_scans(
-    skip: int = 0,
-    limit: int = Query(default=10, le=100)
+    page: int = 0,
+    page_size: int = Query(default=10, le=100)
 ):
-    return ScheduledScan.match_nodes(limit=limit, skip=skip)
+    return ScheduledScan.match_nodes(limit=page_size, skip=page)

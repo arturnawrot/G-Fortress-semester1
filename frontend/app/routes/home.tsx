@@ -1,5 +1,4 @@
-
-import { Link } from "react-router";
+import { Link } from 'react-router'; // Use react-router-dom for components
 
 export default function Home() {
   return (

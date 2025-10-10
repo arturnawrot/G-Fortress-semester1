@@ -100,13 +100,13 @@ def my_task():
     print("Running test task")
 
 celery_app.conf.beat_schedule = {
-    "every-minute-task": {
+    "schedule_pending_scans_every_minute": {
         "task": "tasks.schedule_pending_scans",
-        "schedule": crontab(),
+        "schedule": crontab(),  # every minute
     },
-    "every-minute-task": {
+    "my_task_every_minute": {
         "task": "tasks.my_task",
-        "schedule": crontab(),
+        "schedule": crontab(),  # every minute
     },
 }
 

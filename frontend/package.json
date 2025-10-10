@@ -11,15 +11,21 @@
   "dependencies": {
     "@react-router/node": "^7.7.1",
     "@react-router/serve": "^7.7.1",
+    "@reduxjs/toolkit": "^2.2.6",
     "isbot": "^5.1.27",
+    "jwt-decode": "^4.0.0",
+    "libsodium-wrappers": "^0.7.13",
     "react": "^19.1.0",
+    "react-datetime-picker": "^6.0.1",
     "react-dom": "^19.1.0",
     "react-redux": "^9.2.0",
-    "react-router": "^7.7.1"
+    "react-router": "^7.7.1",
+    "react-toastify": "^10.0.5"
   },
   "devDependencies": {
     "@react-router/dev": "^7.7.1",
     "@tailwindcss/vite": "^4.1.4",
+    "@types/libsodium-wrappers": "^0.7.14",
     "@types/node": "^20",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",

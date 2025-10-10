@@ -55,6 +55,8 @@ def test_full_secure_aes_workflow(create_test_user):
         encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
     )).decode('utf-8')
 
+    print(client_public_key_b64)
+
     login_payload = {
         "username": test_username,
         "password": test_password,
