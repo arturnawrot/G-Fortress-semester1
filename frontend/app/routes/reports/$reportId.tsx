@@ -1,4 +1,4 @@
-import { useParams } from 'react-router'; // Changed from 'react-router-dom'
+import { useParams } from 'react-router';
 import { api } from '../../services/api';
 
 const reportDetailApi = api.injectEndpoints({
@@ -36,23 +36,30 @@ export default function ReportDetailPage() {
             </div>
 
             <div className="space-y-6">
-                {report.users.map((userData: any) => (
-                    <div key={userData.user.uuid} className="p-4 border rounded-lg">
-                        <h3 className="font-bold text-lg">{userData.user.name} on {userData.user.machine.friendly_name}</h3>
-                        <p className="text-sm text-gray-600">Password Last Updated: {new Date(userData.user.password_updated_at).toLocaleDateString()}</p>
-                        
-                        <div className="mt-4">
-                            <h4 className="font-semibold">Vulnerabilities:</h4>
-                            <ul className="list-disc list-inside mt-2 space-y-2">
-                                {userData.vulnerabilities.map((vuln: any) => (
-                                    <li key={vuln.name} className={vuln.is_vulnerable ? 'text-red-600' : 'text-green-600'}>
-                                        <span className="font-medium">{vuln.name} (Severity: {vuln.severity_score})</span>: {vuln.detected_description}
-                                    </li>
-                                ))}
-                            </ul>
+                {report.users.map((userData: any) => {
+                    const detectedVulnerabilities = userData.vulnerabilities.filter((vuln: any) => vuln.is_vulnerable);
+                    return (
+                        <div key={userData.user.uuid} className="p-4 border rounded-lg">
+                            <h3 className="font-bold text-lg">{userData.user.name} on {userData.user.machine.friendly_name}</h3>
+                            <p className="text-sm text-gray-600">Password Last Updated: {new Date(userData.user.password_updated_at).toLocaleDateString()}</p>
+                            
+                            <div className="mt-4">
+                                <h4 className="font-semibold">Detected Vulnerabilities:</h4>
+                                {detectedVulnerabilities.length > 0 ? (
+                                    <ul className="list-disc list-inside mt-2 space-y-2">
+                                        {detectedVulnerabilities.map((vuln: any) => (
+                                            <li key={vuln.name} className="text-red-600">
+                                                <span className="font-medium">{vuln.name} (Severity: {vuln.severity_score})</span>: {vuln.detected_description}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p className="mt-2 text-gray-500">No vulnerabilities were detected for this user.</p>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </div>
     );

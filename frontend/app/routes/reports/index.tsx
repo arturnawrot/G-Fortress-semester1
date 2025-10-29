@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link } from 'react-router'; // Changed from 'react-router-dom'
+import { useSearchParams } from 'react-router';
+import { Link } from 'react-router';
 import { api } from '../../services/api';
 
 const reportsApi = api.injectEndpoints({
@@ -15,9 +15,18 @@ const reportsApi = api.injectEndpoints({
 const { useGetReportsQuery } = reportsApi;
 
 export default function ReportsPage() {
-    const [page, setPage] = useState(1);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const page = parseInt(searchParams.get('page') || '1', 10);
     const pageSize = 10;
     const { data, error, isLoading, isFetching } = useGetReportsQuery({ page, pageSize });
+
+    const handlePrevPage = () => {
+        setSearchParams({ page: Math.max(1, page - 1).toString() });
+    };
+
+    const handleNextPage = () => {
+        setSearchParams({ page: (page + 1).toString() });
+    };
 
     if (isLoading) return <div>Loading reports...</div>;
     if (error) return <div>Error loading reports.</div>;
@@ -35,11 +44,11 @@ export default function ReportsPage() {
                 ))}
             </div>
              <div className="mt-6 flex justify-between items-center">
-                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1 || isFetching} className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50">
+                <button onClick={handlePrevPage} disabled={page === 1 || isFetching} className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50">
                     Previous
                 </button>
                 <span>Page {page}</span>
-                <button onClick={() => setPage(p => p + 1)} disabled={!data || data.length < pageSize || isFetching} className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50">
+                <button onClick={handleNextPage} disabled={!data || data.length < pageSize || isFetching} className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50">
                     Next
                 </button>
             </div>

@@ -71,4 +71,10 @@ async def get_scheduled_scans(
     page: int = 0,
     page_size: int = Query(default=10, le=100)
 ):
-    return ScheduledScan.match_nodes(limit=page_size, skip=page)
+    all_scans = ScheduledScan.match_nodes()
+
+    sorted_scans = sorted(all_scans, key=lambda scan: scan.scheduled_at, reverse=True)
+
+    start = (page - 1) * page_size
+    end = start + page_size
+    return sorted_scans[start:end]

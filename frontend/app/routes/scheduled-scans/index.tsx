@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams, Link } from 'react-router';
 import { api } from '../../services/api';
 import DateTimePicker from 'react-datetime-picker';
 import 'react-datetime-picker/dist/DateTimePicker.css';
@@ -30,7 +31,8 @@ const scheduledScansApi = api.injectEndpoints({
 const { useGetScheduledScansQuery, useScheduleScanMutation } = scheduledScansApi;
 
 export default function ScheduledScansPage() {
-    const [page, setPage] = useState(1);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const page = parseInt(searchParams.get('page') || '1', 10);
     const pageSize = 5;
     const { data, error, isLoading, isFetching } = useGetScheduledScansQuery({ page, pageSize });
     const [scheduleScan, { isLoading: isScheduling }] = useScheduleScanMutation();
@@ -57,6 +59,14 @@ export default function ScheduledScansPage() {
         }
     };
 
+    const handlePrevPage = () => {
+        setSearchParams({ page: Math.max(1, page - 1).toString() });
+    };
+
+    const handleNextPage = () => {
+        setSearchParams({ page: (page + 1).toString() });
+    };
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="md:col-span-2 bg-white p-8 rounded-lg shadow">
@@ -65,26 +75,33 @@ export default function ScheduledScansPage() {
                 {error && <p>Error loading scans.</p>}
                 <div className="space-y-4">
                     {data?.map((scan: any) => (
-                        <div key={scan.uuid} className="p-4 border rounded-lg">
-                            <p className={`font-semibold ${scan.completed_scan_id ? 'text-green-600' : 'text-yellow-600'}`}>
-                                {scan.completed_scan_id ? 'Completed' : 'Pending'}
-                            </p>
-                            <p className="text-sm text-gray-600">Scheduled for: {new Date(scan.scheduled_at).toLocaleString()}</p>
-                            <details className="mt-2 text-sm">
-                                <summary className="cursor-pointer">View Options</summary>
-                                <pre className="bg-gray-100 p-2 rounded mt-1 text-xs">
-                                    {JSON.stringify(scan.options, null, 2)}
-                                </pre>
-                            </details>
+                        <div key={scan.uuid} className="p-4 border rounded-lg flex justify-between items-center">
+                            <div>
+                                <p className={`font-semibold ${scan.completed_scan_id ? 'text-green-600' : 'text-yellow-600'}`}>
+                                    {scan.completed_scan_id ? 'Completed' : 'Pending'}
+                                </p>
+                                <p className="text-sm text-gray-600">Scheduled for: {new Date(scan.scheduled_at).toLocaleString()}</p>
+                                <details className="mt-2 text-sm">
+                                    <summary className="cursor-pointer">View Options</summary>
+                                    <pre className="bg-gray-100 p-2 rounded mt-1 text-xs">
+                                        {JSON.stringify(scan.options, null, 2)}
+                                    </pre>
+                                </details>
+                            </div>
+                            {scan.completed_scan_id && (
+                                <Link to={`/reports/${scan.completed_scan_id}`} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                    View Report
+                                </Link>
+                            )}
                         </div>
                     ))}
                 </div>
                  <div className="mt-6 flex justify-between items-center">
-                    <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1 || isFetching} className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50">
+                    <button onClick={handlePrevPage} disabled={page === 1 || isFetching} className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50">
                         Previous
                     </button>
                     <span>Page {page}</span>
-                    <button onClick={() => setPage(p => p + 1)} disabled={!data || data.length < pageSize || isFetching} className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50">
+                    <button onClick={handleNextPage} disabled={!data || data.length < pageSize || isFetching} className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50">
                         Next
                     </button>
                 </div>
