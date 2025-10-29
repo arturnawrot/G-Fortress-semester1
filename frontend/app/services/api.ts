@@ -20,7 +20,8 @@ const baseQuery = fetchBaseQuery({
     if (token) {
       headers.set('authorization', `Bearer ${token}`);
     }
-    headers.set('X-ENFORCE-AES256', enforceAes ? '1' : '0');
+    // Turned off for development purposes
+    headers.set('X-ENFORCE-AES256', '0');
     return headers;
   },
 });
@@ -36,16 +37,16 @@ const baseQueryWithCrypto: BaseQueryFn<
   
   let finalArgs = typeof args === 'string' ? { url: args } : args;
 
-  if (enforceAes && aesKey && finalArgs.body) {
-    try {
-        const encryptedBody = await encryptData(aesKey, finalArgs.body as any);
-        finalArgs = { ...finalArgs, body: encryptedBody, headers: { ...finalArgs.headers, 'Content-Type': 'text/plain' } };
-    } catch (error) {
-        toast.error("Encryption failed!");
-        console.error('Encryption error:', error);
-        return { error: { status: 'CUSTOM_ERROR', error: 'Encryption failed' } as any };
-    }
-  }
+  // if (enforceAes && aesKey && finalArgs.body) {
+  //   try {
+  //       const encryptedBody = await encryptData(aesKey, finalArgs.body as any);
+  //       finalArgs = { ...finalArgs, body: encryptedBody, headers: { ...finalArgs.headers, 'Content-Type': 'text/plain' } };
+  //   } catch (error) {
+  //       toast.error("Encryption failed!");
+  //       console.error('Encryption error:', error);
+  //       return { error: { status: 'CUSTOM_ERROR', error: 'Encryption failed' } as any };
+  //   }
+  // }
 
   let result = await baseQuery(finalArgs, api, extraOptions);
 
@@ -68,16 +69,16 @@ const baseQueryWithCrypto: BaseQueryFn<
   }
   // --- END OF CORRECTION ---
 
-  if (!result.error && result.data && enforceAes && aesKey) {
-    try {
-        const decryptedData = await decryptData(aesKey, result.data as string);
-        result = { ...result, data: decryptedData };
-    } catch (error) {
-        toast.error("Decryption failed!");
-        console.error('Decryption error:', error);
-        return { error: { status: 'CUSTOM_ERROR', error: 'Decryption failed' } as any };
-    }
-  }
+  // if (!result.error && result.data && enforceAes && aesKey) {
+  //   try {
+  //       const decryptedData = await decryptData(aesKey, result.data as string);
+  //       result = { ...result, data: decryptedData };
+  //   } catch (error) {
+  //       toast.error("Decryption failed!");
+  //       console.error('Decryption error:', error);
+  //       return { error: { status: 'CUSTOM_ERROR', error: 'Decryption failed' } as any };
+  //   }
+  // }
   
   return result;
 };
