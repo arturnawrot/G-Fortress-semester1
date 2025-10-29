@@ -30,7 +30,11 @@ def init_worker(**kwargs):
     # Initialize Neo4j driver here (safe post-fork)
     # IMPORTANT: don't import db/database or db/models until after fork.
     from db.database import init_neontology
-    init_neontology()
+    init_neontology(
+        uri=settings.NEO4J_URI,
+        user=settings.NEO4J_USERNAME,
+        password=settings.NEO4J_PASSWORD,
+    )
 
     # Build a fresh Redis client post-fork.
     # (Optionally avoid hiredis to dodge native parser across forks.)
@@ -108,7 +112,9 @@ def schedule_pending_scans():
     from db.models import ScheduledScan
 
     print("Checking for pending scans...")
-    now = datetime.now(ZoneInfo("America/New_York"))
+    # now = datetime.now(ZoneInfo("America/New_York"))
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc)
 
     pending_scans = ScheduledScan.match_nodes(filters={
         "scheduled_at__lte": now,
