@@ -2,3 +2,4 @@ neo4j/
 *.Identifier
 ntlm_agents_config.json
 pdf_storage/
+trash/

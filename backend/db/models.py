@@ -57,6 +57,10 @@ class UserNode(BaseNode):
     # denormalized convenience
     machine_friendly_name: Optional[str] = None
 
+    hash_algorithm: Optional[str] = None
+    salt: Optional[str] = None
+    rounds: Optional[str] = None
+
     @field_validator("password_updated_at", mode="before")
     @classmethod
     def _coerce_date(cls, v):

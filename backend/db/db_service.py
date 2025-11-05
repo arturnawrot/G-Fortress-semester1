@@ -142,6 +142,9 @@ def load_report(report_id: str) -> DomainReport:
       u.name                    AS user_name,
       u.ntlm_hash               AS user_ntlm,
       u.password_updated_at     AS user_pwd_date,
+      u.hash_algorithm          AS user_hash_algorithm,
+      u.salt                    AS user_salt,
+      u.rounds                  AS user_rounds,
       v.key                     AS v_key,
       v.name                    AS v_name,
       hv.is_vulnerable          AS hv_is_vuln,
@@ -161,6 +164,9 @@ def load_report(report_id: str) -> DomainReport:
         u_uuid = row["user_uuid"]
         u_name = row["user_name"]
         u_ntlm = row["user_ntlm"]
+        u_hash_algorithm = row['user_hash_algorithm']
+        u_salt = row['user_salt']
+        u_rounds = row['user_rounds']
 
         u_pwd_date = row["user_pwd_date"]
         if isinstance(u_pwd_date, datetime):
@@ -173,6 +179,9 @@ def load_report(report_id: str) -> DomainReport:
                 name=u_name,
                 ntlm_hash=u_ntlm,
                 password_updated_at=u_pwd_date,
+                hash_algorithm=u_hash_algorithm,
+                salt=u_salt,
+                rounds=u_rounds
             )
             users_map[u_uuid] = {"domain_user": d_user, "vulns": []}
 

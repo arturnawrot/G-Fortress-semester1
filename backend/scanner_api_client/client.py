@@ -21,5 +21,8 @@ def get_machine_data(uri: str, secret: str) -> List[User]:
 
     if operating_system == 'windows':
         return parse_windows_ntlm_agent_response_into_user_list(res)
+    
+    if operating_system == 'linux':
+        return 
 
     raise NTLMAgentBadResponse(f"Your NTLM agent is misconfigured. It has an unsupported operating system: {res['OS']}")

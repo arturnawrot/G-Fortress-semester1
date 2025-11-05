@@ -4,11 +4,15 @@ import uuid
 import json
 
 class User:
-    def __init__(self, machine: Machine, name: str, ntlm_hash: str, password_updated_at: date | None):
+    def __init__(self, machine: Machine, name: str, ntlm_hash: str, password_updated_at: date | None, 
+                 hash_algorithm = str | None, salt = str | None, rounds = int | None):
         self.machine = machine
         self.name = name
         self.ntlm_hash = ntlm_hash
         self.password_updated_at = password_updated_at
+        self.hash_algorithm = hash_algorithm
+        self.salt = salt
+        self.rounds = rounds
         self.uuid = self._generate_uuid()
 
     def __str__(self):
