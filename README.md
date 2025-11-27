@@ -39,6 +39,8 @@ The backend, database, and task queue system are all orchestrated by Docker Comp
 | **Task Queue**    | Redis (Broker & Result Backend)                                                                          |
 | **Infrastructure**| Docker, Docker Compose, Nginx (for serving the production frontend)                                        |
 
+![Network Diagram](https://github.com/arturnawrot/G-Fortress-semester1/blob/main/screenshots/network-diagram.PNG?raw=true)
+
 ## Getting Started
 
 ### Prerequisites
