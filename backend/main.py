@@ -34,7 +34,7 @@ def main():
 
 # @TODO move everything below to a seperate file then apply app.include_router as above
 from config import settings
-from db.db_service import list_reports
+from db.db_service import list_reports, load_report
 from typing import Literal
 import os
 
@@ -44,6 +44,20 @@ def get_report_as_pdf(report_id: str):
     if not os.path.exists(pdf_file_path):
         return {"error": "PDF file not found"}
     return FileResponse(pdf_file_path, media_type="application/pdf")
+
+
+@app.get("/reports/{report_id}")
+def get_report(report_id: str):
+    """
+    Return a single report by its ID.
+    """
+    try:
+        report = load_report(report_id)
+    except Exception as exc:
+        # Propagate as a 404 if the report does not exist or cannot be loaded
+        raise HTTPException(status_code=404, detail=str(exc))
+
+    return report.to_json()
 
 @app.get("/reports")
 def paginate_reports(

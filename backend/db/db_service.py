@@ -59,6 +59,8 @@ def persist_report(
             ntlm_hash=domain_user.ntlm_hash,
             password_updated_at=domain_user.password_updated_at,
             machine_friendly_name=machine_node.friendly_name,
+            is_windows_hello_enabled=domain_user.is_windows_hello_enabled,
+            last_time_duo_detected=domain_user.last_time_duo_detected
         )
         user_node.merge()
 
@@ -127,7 +129,6 @@ def _instantiate_domain_vuln(
 
     return v
 
-
 def load_report(report_id: str) -> DomainReport:
     gc = GraphConnection()
 
@@ -145,6 +146,8 @@ def load_report(report_id: str) -> DomainReport:
       u.hash_algorithm          AS user_hash_algorithm,
       u.salt                    AS user_salt,
       u.rounds                  AS user_rounds,
+      u.is_windows_hello_enabled AS user_is_windows_hello_enabled,
+      u.last_time_duo_detected  AS user_last_time_duo_detected,
       v.key                     AS v_key,
       v.name                    AS v_name,
       hv.is_vulnerable          AS hv_is_vuln,
@@ -152,7 +155,6 @@ def load_report(report_id: str) -> DomainReport:
       hv.description            AS hv_desc
     ORDER BY user_name ASC
     """
-
     # evaluate_query returns a NeontologyResult; use .records_raw for driver rows
     result = gc.evaluate_query(cypher, {"rid": report_id})
     rows = result.records_raw  # list[neo4j.Record]
@@ -167,6 +169,8 @@ def load_report(report_id: str) -> DomainReport:
         u_hash_algorithm = row['user_hash_algorithm']
         u_salt = row['user_salt']
         u_rounds = row['user_rounds']
+        u_is_windows_hello_enabled = row['user_is_windows_hello_enabled']
+        u_last_time_detected = row['user_last_time_duo_detected']
 
         u_pwd_date = row["user_pwd_date"]
         if isinstance(u_pwd_date, datetime):
@@ -181,7 +185,9 @@ def load_report(report_id: str) -> DomainReport:
                 password_updated_at=u_pwd_date,
                 hash_algorithm=u_hash_algorithm,
                 salt=u_salt,
-                rounds=u_rounds
+                rounds=u_rounds,
+                is_windows_hello_enabled=u_is_windows_hello_enabled,
+                last_time_duo_detected=u_last_time_detected
             )
             users_map[u_uuid] = {"domain_user": d_user, "vulns": []}
 

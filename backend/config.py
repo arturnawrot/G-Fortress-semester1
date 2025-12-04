@@ -37,6 +37,10 @@ class Settings(BaseSettings):
 
     LOG_FILE_PATH : PosixPath = Field(project_root_path / 'logs' / 'logs.txt')
 
+    WIN_NTLM_HASHED_WORDLIST : PosixPath = Field(project_root_path / 'wordlist_win.txt')
+
+    IS_DEMO_MODE : bool = Field(False, env="DEMO_MODE")
+
     @property
     def ntlm_agents_uris(self) -> list[str]:
         if self.NTLM_AGENTS_URIS in ['', None]:

@@ -261,10 +261,26 @@ class MultiUserPDFReport:
                 story.append(_PageMarker(lambda page, name=user.name: markers.append((name, page))))
 
             heading = f"{user.name}  —  {user.machine.friendly_name}"
+            hello_status = getattr(user, "is_windows_hello_enabled", None)
+            if hello_status is True:
+                hello_label = "Windows Hello: enabled"
+            elif hello_status is False:
+                hello_label = "Windows Hello: disabled"
+            else:
+                hello_label = None
+
+            duo_last = getattr(user, "last_time_duo_detected", None)
+            if duo_last:
+                duo_label = f"Last Duo detected: {duo_last}"
+            else:
+                duo_label = "Last Duo detected: never"
+
             meta = " / ".join(filter(None, [
                 getattr(user, "email", None),
                 getattr(user.machine, "operating_system", None),
-                f"pwd updated: {user.get_password_updated_at()}" if user.get_password_updated_at() else None
+                f"pwd updated: {user.get_password_updated_at()}" if user.get_password_updated_at() else None,
+                hello_label,
+                duo_label,
             ]))
             story.append(Paragraph(heading, self.styles["Heading1"]))
             if meta:

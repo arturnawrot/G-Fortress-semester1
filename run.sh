@@ -26,6 +26,10 @@ function _dc {
 
 # ---- python/fastapi helpers ----
 
+function convert_wordlist_to_win_ntlm {
+  _dc api python convert_plain_wordlist_to_win_ntlm_format.py "${@}"
+}
+
 function test {
   _dc api pytest --disable-warnings -rP "${@}"
 }

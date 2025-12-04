@@ -11,6 +11,12 @@ class ReportEncoder(json.JSONEncoder):
         if isinstance(obj, User):
             return {
                 "name": obj.name,
+                "is_windows_hello_enabled": getattr(obj, "is_windows_hello_enabled", None),
+                "last_time_duo_detected": (
+                    obj.last_time_duo_detected.isoformat()
+                    if getattr(obj, "last_time_duo_detected", None)
+                    else None
+                ),
                 "machine": {
                     "friendly_name": obj.machine.friendly_name,
                     "operating_system": obj.machine.operating_system

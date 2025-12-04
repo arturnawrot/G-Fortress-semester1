@@ -1,11 +1,11 @@
 from scanner_api_client.machine import Machine
 from datetime import date
 import uuid
-import json
 
 class User:
     def __init__(self, machine: Machine, name: str, ntlm_hash: str, password_updated_at: date | None, 
-                 hash_algorithm = str | None, salt = str | None, rounds = int | None):
+                 hash_algorithm = str | None, salt = str | None, rounds = int | None, 
+                 is_windows_hello_enabled = bool | None, last_time_duo_detected = date | None):
         self.machine = machine
         self.name = name
         self.ntlm_hash = ntlm_hash
@@ -14,6 +14,8 @@ class User:
         self.salt = salt
         self.rounds = rounds
         self.uuid = self._generate_uuid()
+        self.is_windows_hello_enabled = is_windows_hello_enabled
+        self.last_time_duo_detected = last_time_duo_detected
 
     def __str__(self):
         return f"{self.name}:{self.machine.friendly_name}:{self.ntlm_hash[:6]}:{self.password_updated_at}:{self.uuid}"

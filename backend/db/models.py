@@ -61,6 +61,10 @@ class UserNode(BaseNode):
     salt: Optional[str] = None
     rounds: Optional[str] = None
 
+    is_windows_hello_enabled: Optional[bool] = None
+    last_time_duo_detected: Optional[date] = None
+
+
     @field_validator("password_updated_at", mode="before")
     @classmethod
     def _coerce_date(cls, v):

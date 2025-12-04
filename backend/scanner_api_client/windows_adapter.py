@@ -107,30 +107,71 @@ def extract_sam_hashes(sam_blob: Union[bytes, str], system_blob: Union[bytes, st
 def parse_windows_ntlm_agent_response_into_user_list(res) -> List[User]:
     sam_contents = base64.b64decode(res['sam'])
     system_contents = base64.b64decode(res['system'])
-    last_password_updated_dates = res['last_password_updated_dates']
     ntlm_hashes_list = extract_sam_hashes(sam_contents, system_contents)
     machine_friendly_name = res['friendly_name']
     operating_system = res['OS']
 
-    data = {name: ntlm for name, ntlm in ntlm_hashes_list}
-    merged_data = []
+    # New fields: lists of dicts
+    last_password_updated_dates = res.get('last_password_updated_dates', [])
+    is_windows_hello_enabled = res.get('is_windows_hello_enabled', [])
 
-    for item in last_password_updated_dates:
+    # Map to dicts keyed by Name
+    pwd_by_name = {
+        entry['Name']: entry.get('PasswordLastSet')
+        for entry in last_password_updated_dates
+        if 'Name' in entry
+    }
+    hello_by_name = {
+        entry['Name']: entry.get('WindowsHelloEnabled')
+        for entry in is_windows_hello_enabled
+        if 'Name' in entry
+    }
+
+    # Only Names present in both structures
+    merged_user_arrays = [
+        {
+            "Name": name,
+            "PasswordLastSet": pwd_by_name[name],
+            "WindowsHelloEnabled": hello_by_name[name],
+        }
+        for name in pwd_by_name
+        if name in hello_by_name
+    ]
+
+    # Map NTLM hashes by username
+    ntlm_by_name = {name: ntlm for name, ntlm in ntlm_hashes_list}
+
+    # DUO last time detected (same for all users in this response)
+    duo_last_time_str = res.get("duo_last_time_detected")
+    duo_last_time_detected = None
+    if duo_last_time_str:
+        try:
+            duo_last_time_detected = datetime.fromisoformat(duo_last_time_str).date()
+        except ValueError:
+            # If parsing fails, leave it as None or handle as needed
+            pass
+
+    machine = Machine(machine_friendly_name, operating_system)
+    merged_data: List[User] = []
+
+    for item in merged_user_arrays:
         username = item['Name']
-        ntlm_hash = data.get(username)
+        ntlm_hash = ntlm_by_name.get(username)
 
+        password_last_set = item.get('PasswordLastSet')
         date = None
-
-        if item['PasswordLastSet'] != None:
-            date = datetime.strptime(item['PasswordLastSet'], "%Y-%m-%d %H:%M:%S")
+        if password_last_set is not None:
+            date = datetime.strptime(password_last_set, "%Y-%m-%d %H:%M:%S")
 
         user_object = User(
-            Machine(machine_friendly_name, operating_system),
+            machine,
             username,
             ntlm_hash,
-            date
+            date,
+            is_windows_hello_enabled=item.get("WindowsHelloEnabled"),
+            last_time_duo_detected=duo_last_time_detected,
         )
 
         merged_data.append(user_object)
-    
+
     return merged_data

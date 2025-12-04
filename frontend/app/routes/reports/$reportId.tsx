@@ -4,9 +4,9 @@ import { api } from '../../services/api';
 const reportDetailApi = api.injectEndpoints({
     endpoints: (builder) => ({
         getReportById: builder.query<any, string>({
-            query: (id) => `/reports?id=${id}`, // Assuming API can filter by ID
-             transformResponse: (response: any[]) => response[0], // Assuming it returns a list with one item
-             providesTags: (result, error, id) => [{ type: 'Reports', id }],
+            // Fetch a single report by its ID
+            query: (id) => `/reports/${id}`,
+            providesTags: (result, error, id) => [{ type: 'Reports', id }],
         }),
     }),
 });
@@ -38,10 +38,31 @@ export default function ReportDetailPage() {
             <div className="space-y-6">
                 {report.users.map((userData: any) => {
                     const detectedVulnerabilities = userData.vulnerabilities.filter((vuln: any) => vuln.is_vulnerable);
+                    const windowsHelloEnabled = userData.user.is_windows_hello_enabled;
+                    const duoLastDetected = userData.user.last_time_duo_detected;
                     return (
                         <div key={userData.user.uuid} className="p-4 border rounded-lg">
                             <h3 className="font-bold text-lg">{userData.user.name} on {userData.user.machine.friendly_name}</h3>
-                            <p className="text-sm text-gray-600">Password Last Updated: {new Date(userData.user.password_updated_at).toLocaleDateString()}</p>
+                            <p className="text-sm text-gray-600">
+                                Password Last Updated:{" "}
+                                {userData.user.password_updated_at
+                                    ? new Date(userData.user.password_updated_at).toLocaleDateString()
+                                    : "Unknown"}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                                Windows Hello:{" "}
+                                {windowsHelloEnabled === true
+                                    ? "Enabled"
+                                    : windowsHelloEnabled === false
+                                        ? "Disabled"
+                                        : "Unknown"}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                                Last Duo detected:{" "}
+                                {duoLastDetected
+                                    ? new Date(duoLastDetected).toLocaleString()
+                                    : "Never"}
+                            </p>
                             
                             <div className="mt-4">
                                 <h4 className="font-semibold">Detected Vulnerabilities:</h4>
