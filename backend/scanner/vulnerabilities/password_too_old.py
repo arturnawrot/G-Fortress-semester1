@@ -1,13 +1,16 @@
-from datetime import date
+from datetime import date, datetime
 from scanner.vulnerabilities.vulnerability_interface import VulnerabilityInterface
 from config import settings
 import random
 
 class PasswordTooOld(VulnerabilityInterface):
 
-    def __init__(self, password_updated_at: date, is_vulnerable: bool | None = None):
+    def __init__(self, password_updated_at: date | datetime | None, is_vulnerable: bool | None = None):
         super().__init__(is_vulnerable=is_vulnerable)
-        self.date = password_updated_at
+        # Normalize to a date object for consistent arithmetic
+        if isinstance(password_updated_at, datetime):
+            password_updated_at = password_updated_at.date()
+        self.date: date | None = password_updated_at
         self._days_old: int | None = None
 
     def get_vulnerability_name(self) -> str:
@@ -19,6 +22,12 @@ class PasswordTooOld(VulnerabilityInterface):
     def check(self) -> bool:
         if settings.IS_DEMO_MODE:
             return random.choice([True, False])
+
+        if self.date is None:
+            # If we don't know when the password was set, treat as not vulnerable here.
+            # Other checks may still flag the account.
+            self._days_old = None
+            return False
 
         today = date.today()
         delta = today - self.date
