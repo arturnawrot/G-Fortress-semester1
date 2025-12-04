@@ -61,6 +61,10 @@ The entire project is configured using the `.env` file in the root directory.
     *   `NTLM_AGENTS_URIS`: A semicolon-separated list of URLs for the running NTLM Windows Agents. For agents running on the Docker host machine, use `http://host.docker.internal:<PORT>;`.
 4.  **Frontend**:
     *   `VITE_API_BASE_URL`: The URL of the backend API that the frontend will connect to. The default `http://127.0.0.1:8000` is suitable for local development.
+5. **Password Wordlist**
+   * Upload your own wordlist of most common or weak passwords to `/backend` folder and then run this command:
+
+      `./run.sh convert_wordlist_to_win_ntlm your_wordlist_filename.txt`
 
 ### 2. Running the NTLM Windows Agent
 
